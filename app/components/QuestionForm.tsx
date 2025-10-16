@@ -1,16 +1,17 @@
 "use client";
 
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { Connection } from "@solana/web3.js";
+import { Connection, SendTransactionError } from "@solana/web3.js";
 import { useCallback, useState } from "react";
 import { saveMarket } from "../lib/markets";
+import { addLiquidityToRaydiumPool, createRaydiumLiquidityPool } from "../lib/raydium";
 import { buildCreateMintTransaction, buildMintToTransaction } from "../lib/solana";
 
 export function QuestionForm() {
 	const [question, setQuestion] = useState("");
 	const [loading, setLoading] = useState(false);
 	const { connection } = useConnection();
-	const { publicKey, signTransaction } = useWallet();
+	const { publicKey, signTransaction, sendTransaction } = useWallet();
 
 	const onCreate = useCallback(async () => {
 		if (!publicKey || !signTransaction || !question.trim()) return;
@@ -26,8 +27,8 @@ export function QuestionForm() {
 			tx1.feePayer = publicKey;
 			tx1.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
 			tx1.partialSign(yes.mintKeypair);
-			tx1 = await signTransaction(tx1);
-			await connection.sendRawTransaction(tx1.serialize(), { skipPreflight: false });
+			const sig1 = await sendTransaction(tx1, connection, { skipPreflight: false });
+			await connection.confirmTransaction({ ...(await connection.getLatestBlockhash()), signature: sig1 }, "confirmed");
 
 			// Mint initial liquidity to creator (optional small seed)
 			let tx1b = await buildMintToTransaction({
@@ -38,8 +39,8 @@ export function QuestionForm() {
 			});
 			tx1b.feePayer = publicKey;
 			tx1b.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
-			tx1b = await signTransaction(tx1b);
-			await connection.sendRawTransaction(tx1b.serialize());
+			const sig1b = await sendTransaction(tx1b, connection, { skipPreflight: false });
+			await connection.confirmTransaction({ ...(await connection.getLatestBlockhash()), signature: sig1b }, "confirmed");
 
 			// Create NO mint
 			const no = await buildCreateMintTransaction({
@@ -51,8 +52,8 @@ export function QuestionForm() {
 			tx2.feePayer = publicKey;
 			tx2.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
 			tx2.partialSign(no.mintKeypair);
-			tx2 = await signTransaction(tx2);
-			await connection.sendRawTransaction(tx2.serialize(), { skipPreflight: false });
+			const sig2 = await sendTransaction(tx2, connection, { skipPreflight: false });
+			await connection.confirmTransaction({ ...(await connection.getLatestBlockhash()), signature: sig2 }, "confirmed");
 
 			let tx2b = await buildMintToTransaction({
 				mint: no.mintKeypair.publicKey,
@@ -62,10 +63,34 @@ export function QuestionForm() {
 			});
 			tx2b.feePayer = publicKey;
 			tx2b.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
-			tx2b = await signTransaction(tx2b);
-			await connection.sendRawTransaction(tx2b.serialize());
+			const sig2b = await sendTransaction(tx2b, connection, { skipPreflight: false });
+			await connection.confirmTransaction({ ...(await connection.getLatestBlockhash()), signature: sig2b }, "confirmed");
 
-			// Save market locally
+			// Create Raydium liquidity pool for YES/NO tokens
+			const poolResult = await createRaydiumLiquidityPool({
+				connection: connection as Connection,
+				payer: publicKey,
+				tokenA: yes.mintKeypair.publicKey,
+				tokenB: no.mintKeypair.publicKey,
+				amountA: BigInt(100_0000_00), // 1.0 YES tokens
+				amountB: BigInt(100_0000_00), // 1.0 NO tokens
+			});
+
+			// Add initial liquidity to the pool
+			const addLiquidityTx = await addLiquidityToRaydiumPool({
+				connection: connection as Connection,
+				payer: publicKey,
+				poolInfo: poolResult.poolInfo,
+				tokenA: yes.mintKeypair.publicKey,
+				tokenB: no.mintKeypair.publicKey,
+				amountA: BigInt(100_0000_00),
+				amountB: BigInt(100_0000_00),
+			});
+
+			const sigLiquidity = await sendTransaction(addLiquidityTx, connection, { skipPreflight: false });
+			await connection.confirmTransaction({ ...(await connection.getLatestBlockhash()), signature: sigLiquidity }, "confirmed");
+
+			// Save market locally with pool info
 			saveMarket({
 				id: `${Date.now()}`,
 				question: question.trim(),
@@ -73,11 +98,19 @@ export function QuestionForm() {
 				noMint: no.mintKeypair.publicKey.toBase58(),
 				creator: publicKey.toBase58(),
 				createdAt: Date.now(),
+				poolId: poolResult.poolInfo.poolId,
+				lpMint: poolResult.poolInfo.lpMint,
 			});
 
 			setQuestion("");
-			alert("YES and NO tokens created on devnet.");
+			alert(`YES and NO tokens created with Raydium LP pool: ${poolResult.poolInfo.poolId}`);
 		} catch (e) {
+			if (e instanceof SendTransactionError) {
+				try {
+					const logs = await e.getLogs(connection as Connection);
+					console.error("SendTransactionError logs:", logs);
+				} catch {}
+			}
 			console.error(e);
 			alert("Failed to create mints: " + (e as Error).message);
 		} finally {

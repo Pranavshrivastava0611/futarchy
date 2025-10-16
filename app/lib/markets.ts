@@ -5,6 +5,8 @@ export type Market = {
 	noMint: string;
 	creator: string;
 	createdAt: number;
+	poolId?: string;
+	lpMint?: string;
 };
 
 const STORAGE_KEY = "futarchy_markets_v1";
@@ -24,4 +26,8 @@ export function saveMarket(market: Market) {
 	const current = loadMarkets();
 	const updated = [market, ...current];
 	window.localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+	// Notify listeners that markets changed
+	try {
+		window.dispatchEvent(new Event("markets_updated"));
+	} catch {}
 }
