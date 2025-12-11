@@ -1,17 +1,16 @@
 "use client";
 
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { SendTransactionError } from "@solana/web3.js";
 import { useCallback, useEffect, useState } from "react";
-import { loadMarkets } from "../lib/markets";
+import { updatePoolAfterAddLiquidity, updatePoolAfterRemoveLiquidity, updatePoolAfterSwap } from "../lib/poolState";
 import {
-    AddLiquidityParams,
-    calculateAddLiquidity,
-    calculateRemoveLiquidity,
-    createRaydiumSwap,
-    LiquidityPoolInfo,
-    RemoveLiquidityParams,
-    SwapParams
+  AddLiquidityParams,
+  calculateAddLiquidity,
+  calculateRemoveLiquidity,
+  createRaydiumSwap,
+  LiquidityPoolInfo,
+  RemoveLiquidityParams,
+  SwapParams
 } from "../lib/raydium";
 
 interface TradingInterfaceProps {
@@ -19,33 +18,46 @@ interface TradingInterfaceProps {
   marketId: string;
 }
 
+// --- Price History helpers ---
+const PRICE_HISTORY_KEY = 'futarchy_price_history_v1';
+function appendPriceHistory(marketId: string, price: number) {
+  if (!marketId) return;
+  if (typeof window === 'undefined') return;
+  let all: Record<string, any[]> = {};
+  try { all = JSON.parse(window.localStorage.getItem(PRICE_HISTORY_KEY) || '{}'); } catch {}
+  let arr = all[marketId] || [];
+  arr = [...arr, { time: Date.now(), price }];
+  all[marketId] = arr;
+  window.localStorage.setItem(PRICE_HISTORY_KEY, JSON.stringify(all));
+  try { window.dispatchEvent(new Event('price_history_updated')); } catch {}
+}
+// --- end helpers ---
+
 export function TradingInterface({ poolInfo, marketId }: TradingInterfaceProps) {
   const { connection } = useConnection();
   const { publicKey, sendTransaction } = useWallet();
   const [activeTab, setActiveTab] = useState<'swap' | 'add' | 'remove'>('swap');
   const [loading, setLoading] = useState(false);
-  
-  // Swap state
+
+  // State
   const [swapInputAmount, setSwapInputAmount] = useState('');
   const [swapInputToken, setSwapInputToken] = useState<'A' | 'B'>('A');
   const [swapSlippage, setSwapSlippage] = useState(0.5);
   const [swapResult, setSwapResult] = useState<any>(null);
-  
-  // Add liquidity state
   const [addAmountA, setAddAmountA] = useState('');
   const [addAmountB, setAddAmountB] = useState('');
   const [addResult, setAddResult] = useState<any>(null);
-  
-  // Remove liquidity state
   const [removeLpTokens, setRemoveLpTokens] = useState('');
   const [removeResult, setRemoveResult] = useState<any>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const markets = loadMarkets();
-  const market = markets.find(m => m.id === marketId);
+  // Enforce wallet connection for all major actions
+  const walletConnected = !!publicKey && !!connection && !!sendTransaction;
 
-  // Calculate swap output when inputs change
+  // Calculate swap output
   useEffect(() => {
-    if (swapInputAmount && !isNaN(Number(swapInputAmount)) && publicKey) {
+    setErrorMsg(null);
+    if (swapInputAmount && !isNaN(Number(swapInputAmount)) && walletConnected) {
       const calculateSwap = async () => {
         try {
           const params: SwapParams = {
@@ -54,20 +66,23 @@ export function TradingInterface({ poolInfo, marketId }: TradingInterfaceProps) 
             inputAmount: Number(swapInputAmount),
             inputToken: swapInputToken,
             slippageTolerance: swapSlippage,
-            payer: publicKey
+            payer: publicKey!
           };
           const result = await createRaydiumSwap(params);
           setSwapResult(result);
         } catch (error) {
-          console.error("Error calculating swap:", error);
           setSwapResult(null);
+          setErrorMsg("Failed to calculate swap. Make sure your wallet is connected.");
         }
       };
       calculateSwap();
     } else {
       setSwapResult(null);
+      if (!walletConnected && swapInputAmount) {
+        setErrorMsg("Please connect your wallet to use swaps on devnet.");
+      }
     }
-  }, [swapInputAmount, swapInputToken, swapSlippage, poolInfo, connection, publicKey]);
+  }, [swapInputAmount, swapInputToken, swapSlippage, poolInfo, connection, publicKey, walletConnected]);
 
   // Calculate add liquidity when inputs change
   useEffect(() => {
@@ -98,88 +113,103 @@ export function TradingInterface({ poolInfo, marketId }: TradingInterfaceProps) 
     }
   }, [removeLpTokens, poolInfo]);
 
+  // Swap action: send real transaction
   const handleSwap = useCallback(async () => {
-    if (!publicKey || !sendTransaction || !swapResult) return;
-    
+    if (!walletConnected || !swapResult) {
+      setErrorMsg("Connect your wallet to trade on devnet.");
+      return;
+    }
     setLoading(true);
+    setErrorMsg(null);
     try {
-      // Execute real Raydium swap transaction
-      const signature = await sendTransaction(swapResult.transaction, connection, { 
+      // Construct and send actual transaction using wallet
+      const signature = await sendTransaction(swapResult.transaction, connection, {
         skipPreflight: false,
         maxRetries: 3
       });
-      
-      await connection.confirmTransaction({ 
-        ...(await connection.getLatestBlockhash()), 
-        signature 
-      }, "confirmed");
-      
-      alert(`Swap executed! Transaction: ${signature}\nYou received ${swapResult.outputAmount.toFixed(6)} ${swapInputToken === 'A' ? 'NO' : 'YES'} tokens`);
-    } catch (e) {
-      if (e instanceof SendTransactionError) {
-        try {
-          const logs = await e.getLogs(connection);
-          console.error("SendTransactionError logs:", logs);
-          alert("Swap failed: " + (e as Error).message + "\nLogs: " + logs?.join("\n"));
-        } catch {}
-      }
-      console.error(e);
-      alert("Swap failed: " + (e as Error).message);
+      await connection.confirmTransaction({ ...(await connection.getLatestBlockhash()), signature }, "confirmed");
+      // Pool math and UI updates (same as before, optional if you re-sync on-chain)
+      const { newPrice } = updatePoolAfterSwap(
+        poolInfo.id,
+        swapInputToken,
+        Number(swapInputAmount),
+        poolInfo.feeRate
+      );
+      alert(`Swap executed! Transaction: ${signature}`);
+      appendPriceHistory(marketId, newPrice);
+      window.dispatchEvent(new Event('pool_state_updated'));
+      setSwapInputAmount('');
+      setSwapResult(null);
+    } catch (e: any) {
+      setErrorMsg(e.message || "Failed to send transaction. Check wallet connection.");
     } finally {
       setLoading(false);
     }
-  }, [publicKey, sendTransaction, swapResult, swapInputToken, connection]);
+  }, [walletConnected, sendTransaction, swapResult, connection, swapInputToken, swapInputAmount, poolInfo, marketId]);
 
+  // Add Liquidity
   const handleAddLiquidity = useCallback(async () => {
-    if (!publicKey || !sendTransaction || !addResult) return;
-    
+    if (!walletConnected || !addResult) {
+      setErrorMsg("Connect your wallet to add liquidity.");
+      return;
+    }
     setLoading(true);
+    setErrorMsg(null);
     try {
-      // In a real implementation, you'd create and send add liquidity transactions
-      console.log('Adding liquidity:', addResult);
-      alert(`Liquidity added! You received ${addResult.lpTokensReceived.toFixed(6)} LP tokens (${addResult.sharePercentage.toFixed(2)}% of pool)`);
-    } catch (e) {
-      if (e instanceof SendTransactionError) {
-        try {
-          const logs = await e.getLogs(connection);
-          console.error("SendTransactionError logs:", logs);
-        } catch {}
-      }
-      console.error(e);
-      alert("Add liquidity failed: " + (e as Error).message);
+      // TODO: generate and send add liquidity transaction using wallet
+      // For now, just update UI state as placeholder
+      const { newState, lpTokensReceived } = updatePoolAfterAddLiquidity(
+        poolInfo.id,
+        Number(addAmountA),
+        Number(addAmountB)
+      );
+      const newPrice = newState.quoteReserve / newState.baseReserve;
+      alert(`Liquidity added!\nNew YES price: $${newPrice.toFixed(4)}`);
+      appendPriceHistory(marketId, newPrice);
+      window.dispatchEvent(new Event('pool_state_updated'));
+      setAddAmountA('');
+      setAddAmountB('');
+      setAddResult(null);
+    } catch (e: any) {
+      setErrorMsg(e.message || "Failed to add liquidity.");
     } finally {
       setLoading(false);
     }
-  }, [publicKey, sendTransaction, addResult, connection]);
+  }, [walletConnected, addResult, addAmountA, addAmountB, poolInfo, marketId]);
 
+  // Remove Liquidity
   const handleRemoveLiquidity = useCallback(async () => {
-    if (!publicKey || !sendTransaction || !removeResult) return;
-    
+    if (!walletConnected || !removeResult) {
+      setErrorMsg("Connect your wallet to remove liquidity.");
+      return;
+    }
     setLoading(true);
+    setErrorMsg(null);
     try {
-      // In a real implementation, you'd create and send remove liquidity transactions
-      console.log('Removing liquidity:', removeResult);
-      alert(`Liquidity removed! You received ${removeResult.amountA.toFixed(6)} YES and ${removeResult.amountB.toFixed(6)} NO tokens`);
-    } catch (e) {
-      if (e instanceof SendTransactionError) {
-        try {
-          const logs = await e.getLogs(connection);
-          console.error("SendTransactionError logs:", logs);
-        } catch {}
-      }
-      console.error(e);
-      alert("Remove liquidity failed: " + (e as Error).message);
+      // TODO: generate and send remove liquidity transaction using wallet
+      // For now, just update UI state as placeholder
+      const { newState } = updatePoolAfterRemoveLiquidity(
+        poolInfo.id,
+        Number(removeLpTokens)
+      );
+      const newPrice = newState.quoteReserve / newState.baseReserve;
+      alert(`Liquidity removed!\nNew YES price: $${newPrice.toFixed(4)}`);
+      appendPriceHistory(marketId, newPrice);
+      window.dispatchEvent(new Event('pool_state_updated'));
+      setRemoveLpTokens('');
+      setRemoveResult(null);
+    } catch (e: any) {
+      setErrorMsg(e.message || "Failed to remove liquidity.");
     } finally {
       setLoading(false);
     }
-  }, [publicKey, sendTransaction, removeResult, connection]);
+  }, [walletConnected, removeResult, removeLpTokens, poolInfo, marketId]);
 
   return (
     <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-lg p-6 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
       <div className="mb-6">
         <h3 className="text-lg font-medium mb-2">Trading Interface</h3>
-        <p className="text-sm text-white/60 mb-4">{market?.question}</p>
-        
+        {/* <p className="text-sm text-white/60 mb-4">{market?.question}</p> */}
         {/* Pool Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <div className="bg-white/5 rounded-xl p-3">
@@ -200,7 +230,6 @@ export function TradingInterface({ poolInfo, marketId }: TradingInterfaceProps) 
           </div>
         </div>
       </div>
-
       {/* Tab Navigation */}
       <div className="flex space-x-1 mb-6 bg-white/5 rounded-xl p-1">
         <button
@@ -234,7 +263,6 @@ export function TradingInterface({ poolInfo, marketId }: TradingInterfaceProps) 
           Remove Liquidity
         </button>
       </div>
-
       {/* Swap Tab */}
       {activeTab === 'swap' && (
         <div className="space-y-4">
@@ -258,7 +286,6 @@ export function TradingInterface({ poolInfo, marketId }: TradingInterfaceProps) 
               </select>
             </div>
           </div>
-
           <div>
             <label className="block text-sm text-white/80 mb-2">Slippage Tolerance (%)</label>
             <input
@@ -271,7 +298,6 @@ export function TradingInterface({ poolInfo, marketId }: TradingInterfaceProps) 
               className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 outline-none focus:ring-2 focus:ring-white/20"
             />
           </div>
-
           {swapResult && (
             <div className="bg-white/5 rounded-xl p-4 space-y-2">
               <div className="flex justify-between">
@@ -282,9 +308,7 @@ export function TradingInterface({ poolInfo, marketId }: TradingInterfaceProps) 
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-white/60">Price Impact:</span>
-                <span className={`text-sm ${swapResult.priceImpact > 5 ? 'text-red-400' : 'text-green-400'}`}>
-                  {swapResult.priceImpact.toFixed(2)}%
-                </span>
+                <span className={`text-sm ${swapResult.priceImpact > 5 ? 'text-red-400' : 'text-green-400'}`}>{swapResult.priceImpact.toFixed(2)}%</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-white/60">Fee:</span>
@@ -292,17 +316,16 @@ export function TradingInterface({ poolInfo, marketId }: TradingInterfaceProps) 
               </div>
             </div>
           )}
-
           <button
             onClick={handleSwap}
-            disabled={loading || !publicKey || !swapResult}
+            disabled={loading || !swapResult || !walletConnected}
             className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 text-white disabled:opacity-50"
           >
             {loading ? "Swapping..." : "Swap"}
           </button>
+          {errorMsg && <p className="text-red-400 text-sm mt-2">{errorMsg}</p>}
         </div>
       )}
-
       {/* Add Liquidity Tab */}
       {activeTab === 'add' && (
         <div className="space-y-4">
@@ -316,7 +339,6 @@ export function TradingInterface({ poolInfo, marketId }: TradingInterfaceProps) 
               className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 outline-none focus:ring-2 focus:ring-white/20"
             />
           </div>
-
           <div>
             <label className="block text-sm text-white/80 mb-2">NO Amount</label>
             <input
@@ -327,7 +349,6 @@ export function TradingInterface({ poolInfo, marketId }: TradingInterfaceProps) 
               className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 outline-none focus:ring-2 focus:ring-white/20"
             />
           </div>
-
           {addResult && (
             <div className="bg-white/5 rounded-xl p-4 space-y-2">
               <div className="flex justify-between">
@@ -340,17 +361,16 @@ export function TradingInterface({ poolInfo, marketId }: TradingInterfaceProps) 
               </div>
             </div>
           )}
-
           <button
             onClick={handleAddLiquidity}
-            disabled={loading || !publicKey || !addResult}
+            disabled={loading || !addResult || !walletConnected}
             className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 text-white disabled:opacity-50"
           >
             {loading ? "Adding..." : "Add Liquidity"}
           </button>
+          {errorMsg && <p className="text-red-400 text-sm mt-2">{errorMsg}</p>}
         </div>
       )}
-
       {/* Remove Liquidity Tab */}
       {activeTab === 'remove' && (
         <div className="space-y-4">
@@ -364,7 +384,6 @@ export function TradingInterface({ poolInfo, marketId }: TradingInterfaceProps) 
               className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 outline-none focus:ring-2 focus:ring-white/20"
             />
           </div>
-
           {removeResult && (
             <div className="bg-white/5 rounded-xl p-4 space-y-2">
               <div className="flex justify-between">
@@ -381,14 +400,14 @@ export function TradingInterface({ poolInfo, marketId }: TradingInterfaceProps) 
               </div>
             </div>
           )}
-
           <button
             onClick={handleRemoveLiquidity}
-            disabled={loading || !publicKey || !removeResult}
+            disabled={loading || !removeResult || !walletConnected}
             className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-red-500 to-pink-500 text-white disabled:opacity-50"
           >
             {loading ? "Removing..." : "Remove Liquidity"}
           </button>
+          {errorMsg && <p className="text-red-400 text-sm mt-2">{errorMsg}</p>}
         </div>
       )}
     </div>

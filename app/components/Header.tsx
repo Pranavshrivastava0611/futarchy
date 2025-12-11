@@ -6,8 +6,9 @@ import { useMemo, useState } from "react";
 
 const nav = [
 	{ href: "/", label: "Home" },
-	{ href: "#create", label: "Create" },
-	{ href: "#markets", label: "Markets" },
+	{ href: "/create", label: "Create" },
+	{ href: "/markets", label: "Markets" },
+	{ href: "/about", label: "About" },
 ];
 
 export function Header() {
@@ -55,9 +56,15 @@ export function Header() {
 						</Link>
 						<nav className="hidden md:flex items-center gap-2">
 							{nav.map((n) => (
-								<a key={n.href} href={n.href} className="px-3 py-1.5 rounded-full text-sm border border-white/10 text-white/80 hover:text-white hover:bg-white/10">
-									{n.label}
-								</a>
+								n.href.startsWith("/") ? (
+									<Link key={n.href} href={n.href} className="px-3 py-1.5 rounded-full text-sm border border-white/10 text-white/80 hover:text-white hover:bg-white/10">
+										{n.label}
+									</Link>
+								) : (
+									<a key={n.href} href={n.href} className="px-3 py-1.5 rounded-full text-sm border border-white/10 text-white/80 hover:text-white hover:bg-white/10">
+										{n.label}
+									</a>
+								)
 							))}
 						</nav>
 						<div className="relative">
