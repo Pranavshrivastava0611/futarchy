@@ -248,9 +248,9 @@ export interface AddLiquidityResult {
 
 export function calculateAddLiquidity(params: AddLiquidityParams): AddLiquidityResult {
   const { poolInfo, amountA, amountB } = params;
-  const { tokenAReserve, tokenBReserve, lpTokenSupply } = poolInfo;
+  const { baseReserveNumber, quoteReserveNumber, lpSupplyNumber } = poolInfo;
   
-  if (tokenAReserve === 0 && tokenBReserve === 0) {
+  if (baseReserveNumber === 0 && quoteReserveNumber === 0) {
     // Initial liquidity
     const lpTokens = Math.sqrt(amountA * amountB);
     return {
@@ -258,14 +258,12 @@ export function calculateAddLiquidity(params: AddLiquidityParams): AddLiquidityR
       sharePercentage: 100
     };
   }
-  
-  const ratioA = amountA / tokenAReserve;
-  const ratioB = amountB / tokenBReserve;
+  const ratioA = amountA / baseReserveNumber;
+  const ratioB = amountB / quoteReserveNumber;
   const minRatio = Math.min(ratioA, ratioB);
   
-  const lpTokens = minRatio * lpTokenSupply;
-  const sharePercentage = (lpTokens / (lpTokenSupply + lpTokens)) * 100;
-  
+  const lpTokens = minRatio * lpSupplyNumber;
+  const sharePercentage = (lpTokens / (lpSupplyNumber + lpTokens)) * 100;
   return {
     lpTokensReceived: lpTokens,
     sharePercentage
@@ -276,7 +274,6 @@ export interface RemoveLiquidityParams {
   poolInfo: LiquidityPoolInfo;
   lpTokens: number;
 }
-
 export interface RemoveLiquidityResult {
   amountA: number;
   amountB: number;
@@ -285,11 +282,11 @@ export interface RemoveLiquidityResult {
 
 export function calculateRemoveLiquidity(params: RemoveLiquidityParams): RemoveLiquidityResult {
   const { poolInfo, lpTokens } = params;
-  const { tokenAReserve, tokenBReserve, lpTokenSupply } = poolInfo;
+  const { baseReserveNumber, quoteReserveNumber, lpSupplyNumber } = poolInfo;
   
-  const sharePercentage = (lpTokens / lpTokenSupply) * 100;
-  const amountA = sharePercentage / 100 * tokenAReserve;
-  const amountB = sharePercentage / 100 * tokenBReserve;
+  const sharePercentage = (lpTokens / lpSupplyNumber) * 100;
+  const amountA = sharePercentage / 100 * baseReserveNumber;
+  const amountB = sharePercentage / 100 * quoteReserveNumber;
   
   return {
     amountA,

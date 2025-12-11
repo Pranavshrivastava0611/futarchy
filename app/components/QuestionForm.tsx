@@ -98,12 +98,12 @@ export function QuestionForm() {
 				noMint: no.mintKeypair.publicKey.toBase58(),
 				creator: publicKey.toBase58(),
 				createdAt: Date.now(),
-				poolId: poolResult.poolInfo.poolId,
+				poolId: poolResult.poolInfo.id,
 				lpMint: poolResult.poolInfo.lpMint,
 			});
 
 			setQuestion("");
-			alert(`YES and NO tokens created with Raydium LP pool: ${poolResult.poolInfo.poolId}`);
+			alert(`YES and NO tokens created with Raydium LP pool: ${poolResult.poolInfo.id}`);
 		} catch (e) {
 			if (e instanceof SendTransactionError) {
 				try {

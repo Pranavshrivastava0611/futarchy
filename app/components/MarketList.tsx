@@ -29,7 +29,7 @@ export function MarketList() {
 		id: market.poolId || `pool_${market.id}`,
 		baseMint: market.yesMint,
 		quoteMint: market.noMint,
-		lpMint: `lp_${market.id}`,
+		lpMint: market.lpMint || `lp_${market.id}`,
 		baseVault: `vault_a_${market.id}`,
 		quoteVault: `vault_b_${market.id}`,
 		authority: `auth_${market.id}`,
