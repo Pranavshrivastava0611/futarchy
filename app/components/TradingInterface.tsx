@@ -2,6 +2,7 @@
 
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { useCallback, useEffect, useState } from "react";
+import { loadMarkets } from "../lib/markets";
 import { updatePoolAfterAddLiquidity, updatePoolAfterRemoveLiquidity, updatePoolAfterSwap } from "../lib/poolState";
 import {
   AddLiquidityParams,
@@ -38,6 +39,10 @@ export function TradingInterface({ poolInfo, marketId }: TradingInterfaceProps) 
   const { publicKey, sendTransaction } = useWallet();
   const [activeTab, setActiveTab] = useState<'swap' | 'add' | 'remove'>('swap');
   const [loading, setLoading] = useState(false);
+  
+  // Load market data
+  const markets = loadMarkets();
+  const market = markets.find(m => m.id === marketId);
 
   // State
   const [swapInputAmount, setSwapInputAmount] = useState('');
@@ -209,7 +214,9 @@ export function TradingInterface({ poolInfo, marketId }: TradingInterfaceProps) 
     <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-lg p-6 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
       <div className="mb-6">
         <h3 className="text-lg font-medium mb-2">Trading Interface</h3>
-        {/* <p className="text-sm text-white/60 mb-4">{market?.question}</p> */}
+        {market && (
+          <p className="text-sm text-white/60 mb-4">{market.question}</p>
+        )}
         {/* Pool Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <div className="bg-white/5 rounded-xl p-3">
