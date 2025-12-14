@@ -1,0 +1,9 @@
+D:\prcaticum 5\futarchy-gov\target\debug\deps\spl_transfer_hook_interface-b8160cbae84fec6d.d: C:\Users\pranav\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\spl-transfer-hook-interface-0.3.0\src\lib.rs C:\Users\pranav\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\spl-transfer-hook-interface-0.3.0\src\error.rs C:\Users\pranav\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\spl-transfer-hook-interface-0.3.0\src\instruction.rs C:\Users\pranav\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\spl-transfer-hook-interface-0.3.0\src\offchain.rs C:\Users\pranav\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\spl-transfer-hook-interface-0.3.0\src\onchain.rs
+
+D:\prcaticum 5\futarchy-gov\target\debug\deps\libspl_transfer_hook_interface-b8160cbae84fec6d.rmeta: C:\Users\pranav\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\spl-transfer-hook-interface-0.3.0\src\lib.rs C:\Users\pranav\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\spl-transfer-hook-interface-0.3.0\src\error.rs C:\Users\pranav\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\spl-transfer-hook-interface-0.3.0\src\instruction.rs C:\Users\pranav\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\spl-transfer-hook-interface-0.3.0\src\offchain.rs C:\Users\pranav\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\spl-transfer-hook-interface-0.3.0\src\onchain.rs
+
+C:\Users\pranav\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\spl-transfer-hook-interface-0.3.0\src\lib.rs:
+C:\Users\pranav\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\spl-transfer-hook-interface-0.3.0\src\error.rs:
+C:\Users\pranav\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\spl-transfer-hook-interface-0.3.0\src\instruction.rs:
+C:\Users\pranav\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\spl-transfer-hook-interface-0.3.0\src\offchain.rs:
+C:\Users\pranav\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\spl-transfer-hook-interface-0.3.0\src\onchain.rs:

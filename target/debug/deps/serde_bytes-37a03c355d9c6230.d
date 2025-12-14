@@ -1,0 +1,10 @@
+D:\prcaticum 5\futarchy-gov\target\debug\deps\serde_bytes-37a03c355d9c6230.d: C:\Users\pranav\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde_bytes-0.11.19\src\lib.rs C:\Users\pranav\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde_bytes-0.11.19\src\bytearray.rs C:\Users\pranav\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde_bytes-0.11.19\src\bytes.rs C:\Users\pranav\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde_bytes-0.11.19\src\de.rs C:\Users\pranav\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde_bytes-0.11.19\src\ser.rs C:\Users\pranav\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde_bytes-0.11.19\src\bytebuf.rs
+
+D:\prcaticum 5\futarchy-gov\target\debug\deps\libserde_bytes-37a03c355d9c6230.rmeta: C:\Users\pranav\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde_bytes-0.11.19\src\lib.rs C:\Users\pranav\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde_bytes-0.11.19\src\bytearray.rs C:\Users\pranav\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde_bytes-0.11.19\src\bytes.rs C:\Users\pranav\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde_bytes-0.11.19\src\de.rs C:\Users\pranav\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde_bytes-0.11.19\src\ser.rs C:\Users\pranav\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde_bytes-0.11.19\src\bytebuf.rs
+
+C:\Users\pranav\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde_bytes-0.11.19\src\lib.rs:
+C:\Users\pranav\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde_bytes-0.11.19\src\bytearray.rs:
+C:\Users\pranav\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde_bytes-0.11.19\src\bytes.rs:
+C:\Users\pranav\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde_bytes-0.11.19\src\de.rs:
+C:\Users\pranav\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde_bytes-0.11.19\src\ser.rs:
+C:\Users\pranav\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde_bytes-0.11.19\src\bytebuf.rs:

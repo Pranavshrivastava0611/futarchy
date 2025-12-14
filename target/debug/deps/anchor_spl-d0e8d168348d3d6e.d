@@ -1,0 +1,10 @@
+D:\prcaticum 5\futarchy-gov\target\debug\deps\anchor_spl-d0e8d168348d3d6e.d: C:\Users\pranav\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anchor-spl-0.29.0\src\lib.rs C:\Users\pranav\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anchor-spl-0.29.0\src\associated_token.rs C:\Users\pranav\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anchor-spl-0.29.0\src\mint.rs C:\Users\pranav\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anchor-spl-0.29.0\src\token.rs C:\Users\pranav\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anchor-spl-0.29.0\src\token_2022.rs C:\Users\pranav\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anchor-spl-0.29.0\src\token_interface.rs
+
+D:\prcaticum 5\futarchy-gov\target\debug\deps\libanchor_spl-d0e8d168348d3d6e.rmeta: C:\Users\pranav\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anchor-spl-0.29.0\src\lib.rs C:\Users\pranav\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anchor-spl-0.29.0\src\associated_token.rs C:\Users\pranav\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anchor-spl-0.29.0\src\mint.rs C:\Users\pranav\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anchor-spl-0.29.0\src\token.rs C:\Users\pranav\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anchor-spl-0.29.0\src\token_2022.rs C:\Users\pranav\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anchor-spl-0.29.0\src\token_interface.rs
+
+C:\Users\pranav\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anchor-spl-0.29.0\src\lib.rs:
+C:\Users\pranav\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anchor-spl-0.29.0\src\associated_token.rs:
+C:\Users\pranav\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anchor-spl-0.29.0\src\mint.rs:
+C:\Users\pranav\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anchor-spl-0.29.0\src\token.rs:
+C:\Users\pranav\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anchor-spl-0.29.0\src\token_2022.rs:
+C:\Users\pranav\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anchor-spl-0.29.0\src\token_interface.rs:

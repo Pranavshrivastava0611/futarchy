@@ -1,0 +1,8 @@
+   0.794939500s  INFO prepare_target{force=false package_id=futarchy-gov v0.1.0 (D:\prcaticum 5\futarchy-gov\programs\futarchy-gov) target="futarchy_gov"}: cargo::core::compiler::fingerprint: fingerprint dirty for futarchy-gov v0.1.0 (D:\prcaticum 5\futarchy-gov\programs\futarchy-gov)/Check { test: false }/TargetInner { ..: lib_target("futarchy_gov", ["cdylib", "lib"], "D:\\prcaticum 5\\futarchy-gov\\programs\\futarchy-gov\\src\\lib.rs", Edition2021) }
+   0.795037900s  INFO prepare_target{force=false package_id=futarchy-gov v0.1.0 (D:\prcaticum 5\futarchy-gov\programs\futarchy-gov) target="futarchy_gov"}: cargo::core::compiler::fingerprint:     dirty: FsStatusOutdated(Stale)
+   0.907278900s  INFO prepare_target{force=false package_id=futarchy-gov v0.1.0 (D:\prcaticum 5\futarchy-gov\programs\futarchy-gov) target="futarchy_gov"}: cargo::core::compiler::fingerprint: fingerprint dirty for futarchy-gov v0.1.0 (D:\prcaticum 5\futarchy-gov\programs\futarchy-gov)/Check { test: true }/TargetInner { ..: lib_target("futarchy_gov", ["cdylib", "lib"], "D:\\prcaticum 5\\futarchy-gov\\programs\\futarchy-gov\\src\\lib.rs", Edition2021) }
+   0.907323300s  INFO prepare_target{force=false package_id=futarchy-gov v0.1.0 (D:\prcaticum 5\futarchy-gov\programs\futarchy-gov) target="futarchy_gov"}: cargo::core::compiler::fingerprint:     dirty: FsStatusOutdated(Stale)
+    Checking futarchy-gov v0.1.0 (D:\prcaticum 5\futarchy-gov\programs\futarchy-gov)
+error: could not compile `futarchy-gov` (lib test) due to 6 previous errors; 16 warnings emitted
+warning: build failed, waiting for other jobs to finish...
+error: could not compile `futarchy-gov` (lib) due to 6 previous errors; 16 warnings emitted
