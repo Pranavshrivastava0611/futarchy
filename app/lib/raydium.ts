@@ -67,7 +67,7 @@ export async function createRaydiumLiquidityPool(params: CreateLiquidityPoolPara
   const { connection, payer, tokenA, tokenB, amountA, amountB, feeRate = 0.003 } = params;
 
   try {
-    // Create a realistic Raydium-style pool simulation
+
     const transaction = new Transaction();
     
     // Create pool account (simulating Raydium pool creation)
